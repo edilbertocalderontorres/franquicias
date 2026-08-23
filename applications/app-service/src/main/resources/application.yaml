@@ -11,6 +11,10 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  web:
+    resources:
+      # Sirve applications/app-service/src/main/resources/static/openapi.yml en /openapi.yml
+      static-locations: "classpath:/static/"
 management:
   endpoints:
     web:
@@ -22,3 +26,11 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+adapters:
+  r2dbc:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    database: ${DB_NAME:franquicias}
+    schema: ${DB_SCHEMA:public}
+    username: ${DB_USERNAME:app}
+    password: ${DB_PASSWORD:app}
