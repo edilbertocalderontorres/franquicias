@@ -1,7 +1,8 @@
 package co.com.franquicias.api.config;
 
-import co.com.franquicias.api.Handler;
-import co.com.franquicias.api.RouterRest;
+import co.com.franquicias.api.ManejadorWeb;
+import co.com.franquicias.api.EnrutadorRest;
+import co.com.franquicias.api.mapper.FranquiciaMapper;
 import co.com.franquicias.usecase.consultasnegocio.ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.franquicias.CrearFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.inventario.ActualizarInventarioProductoCasoDeUso;
@@ -16,7 +17,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+@ContextConfiguration(classes = {EnrutadorRest.class, ManejadorWeb.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
@@ -41,6 +42,9 @@ class ConfigTest {
 
     @MockitoBean
     private ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso consultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
+
+    @MockitoBean
+    private FranquiciaMapper franquiciaMapper;
 
     @Test
     void corsConfigurationShouldAllowOrigins() {

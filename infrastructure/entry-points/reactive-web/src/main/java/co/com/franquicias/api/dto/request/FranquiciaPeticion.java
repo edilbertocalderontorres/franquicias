@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class FranquiciaPeticion {
 
     private String nombre;
+    private String tipoDocumento;
+    private String numeroDocumento;
 }

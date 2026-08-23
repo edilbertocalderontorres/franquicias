@@ -13,4 +13,6 @@ public class Franquicia {
 
     private Long id;
     private String nombre;
+    private TipoDocumento tipoDocumento;
+    private String numeroDocumento;
 }

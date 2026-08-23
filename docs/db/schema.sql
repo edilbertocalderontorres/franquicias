@@ -1,21 +1,31 @@
 -- DDL PostgreSQL - Modelo de datos Franquicias
 -- Entidades: Franquicia (1) -> Sucursal (N) -> Producto (N)
+--
+-- Nota de diseño (ver docs/decisiones/0001-identificador-unico-de-negocio.md):
+-- "nombre" NO es clave de unicidad en ningún nivel (un espacio o un caracter distinto
+-- genera duplicados accidentales). La unicidad real la dan atributos de negocio dedicados.
 
 CREATE TABLE IF NOT EXISTS franquicia (
-    id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    nombre VARCHAR(120) NOT NULL,
-    CONSTRAINT uq_franquicia_nombre UNIQUE (nombre)
+    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre            VARCHAR(120) NOT NULL,
+    tipo_documento    VARCHAR(10) NOT NULL,
+    numero_documento  VARCHAR(30) NOT NULL,
+    CONSTRAINT chk_franquicia_tipo_documento
+        CHECK (tipo_documento IN ('NIT', 'CC', 'CE')),
+    CONSTRAINT uq_franquicia_documento
+        UNIQUE (tipo_documento, numero_documento)
 );
 
 CREATE TABLE IF NOT EXISTS sucursal (
     id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre        VARCHAR(120) NOT NULL,
+    codigo        VARCHAR(30) NOT NULL,
     franquicia_id BIGINT NOT NULL,
     CONSTRAINT fk_sucursal_franquicia
         FOREIGN KEY (franquicia_id) REFERENCES franquicia (id)
         ON DELETE CASCADE,
-    CONSTRAINT uq_sucursal_nombre_por_franquicia
-        UNIQUE (franquicia_id, nombre)
+    CONSTRAINT uq_sucursal_franquicia_codigo
+        UNIQUE (franquicia_id, codigo)
 );
 
 CREATE TABLE IF NOT EXISTS producto (
