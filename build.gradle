@@ -6,6 +6,8 @@ buildscript {
 		jacocoVersion = '0.8.15'
 		blockHoundVersion = '1.0.17.RELEASE'
         lombokVersion = '1.18.46'
+        mapstructVersion = '1.6.3'
+        lombokMapstructBindingVersion = '0.2.0'
 	}
 }
 
