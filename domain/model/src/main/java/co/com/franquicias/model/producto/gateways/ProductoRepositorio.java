@@ -14,4 +14,6 @@ public interface ProductoRepositorio {
     Mono<Boolean> existePorSucursalIdYCodigo(Long sucursalId, String codigo);
 
     Mono<Producto> aplicarMovimientoStock(Long productoId, String idempotencyKey, String usuario, Integer delta);
+
+    Mono<Producto> buscarMayorStockPorSucursal(Long sucursalId);
 }

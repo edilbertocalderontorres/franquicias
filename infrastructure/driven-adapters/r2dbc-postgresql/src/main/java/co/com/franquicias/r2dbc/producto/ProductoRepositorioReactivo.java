@@ -25,4 +25,7 @@ public interface ProductoRepositorioReactivo extends
     @Modifying
     @Query("UPDATE producto SET stock = stock + :delta WHERE id = :id AND activo = true AND stock + :delta >= 0")
     Mono<Integer> aplicarDelta(@Param("id") Long id, @Param("delta") Integer delta);
+
+    @Query("SELECT * FROM producto WHERE sucursal_id = :sucursalId AND activo = true ORDER BY stock DESC LIMIT 1")
+    Mono<ProductoEntidad> buscarMayorStockPorSucursal(@Param("sucursalId") Long sucursalId);
 }

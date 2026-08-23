@@ -68,6 +68,11 @@ public class ProductoRepositorioReactivoAdaptador extends ReactiveAdapterOperati
                 .map(this::toEntity);
     }
 
+    @Override
+    public Mono<Producto> buscarMayorStockPorSucursal(Long sucursalId) {
+        return repository.buscarMayorStockPorSucursal(sucursalId).map(this::toEntity);
+    }
+
     private Mono<ProductoEntidad> aplicarDeltaYRegistrar(Long productoId, String idempotencyKey, String usuario, Integer delta) {
         Mono<ProductoEntidad> operacion = repository.aplicarDelta(productoId, delta)
                 .filter(filasAfectadas -> filasAfectadas > 0)

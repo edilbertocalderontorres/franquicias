@@ -6,6 +6,7 @@ import co.com.franquicias.r2dbc.entity.SucursalEntidad;
 import co.com.franquicias.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
@@ -28,6 +29,11 @@ public class SucursalRepositorioReactivoAdaptador extends ReactiveAdapterOperati
     @Override
     public Mono<Sucursal> buscarPorId(Long id) {
         return findById(id);
+    }
+
+    @Override
+    public Flux<Sucursal> buscarPorFranquiciaId(Long franquiciaId) {
+        return repository.buscarPorFranquiciaId(franquiciaId).map(this::toEntity);
     }
 
     @Override

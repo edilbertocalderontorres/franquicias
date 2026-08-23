@@ -81,7 +81,11 @@ public class ManejadorWeb {
     }
 
     public Mono<ServerResponse> consultarProductoMayorStockPorSucursal(ServerRequest request) {
-        return null;
+        Long franquiciaId = Long.valueOf(request.pathVariable("franquiciaId"));
+        return consultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso.ejecutar(franquiciaId)
+                .map(tupla -> productoMapper.aRespuesta(tupla.getT1(), tupla.getT2()))
+                .collectList()
+                .flatMap(respuesta -> ServerResponse.status(HttpStatus.OK).bodyValue(respuesta));
     }
 
     private String obtenerHeaderRequerido(ServerRequest request, String nombre) {
