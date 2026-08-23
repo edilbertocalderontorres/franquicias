@@ -3,6 +3,7 @@ package co.com.franquicias.api.config;
 import co.com.franquicias.api.ManejadorWeb;
 import co.com.franquicias.api.EnrutadorRest;
 import co.com.franquicias.api.mapper.FranquiciaMapper;
+import co.com.franquicias.api.mapper.ProductoMapper;
 import co.com.franquicias.api.mapper.SucursalMapper;
 import co.com.franquicias.usecase.consultasnegocio.ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.franquicias.CrearFranquiciaCasoDeUso;
@@ -49,6 +50,9 @@ class ConfigTest {
 
     @MockitoBean
     private SucursalMapper sucursalMapper;
+
+    @MockitoBean
+    private ProductoMapper productoMapper;
 
     @Test
     void corsConfigurationShouldAllowOrigins() {

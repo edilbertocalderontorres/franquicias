@@ -20,6 +20,8 @@ public class ProductoEntidad {
 
     private String nombre;
 
+    private String codigo;
+
     private Integer stock;
 
     @Column("sucursal_id")

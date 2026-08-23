@@ -31,13 +31,14 @@ CREATE TABLE IF NOT EXISTS sucursal (
 CREATE TABLE IF NOT EXISTS producto (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre      VARCHAR(120) NOT NULL,
+    codigo      VARCHAR(30) NOT NULL,
     stock       INTEGER NOT NULL DEFAULT 0,
     sucursal_id BIGINT NOT NULL,
     CONSTRAINT fk_producto_sucursal
         FOREIGN KEY (sucursal_id) REFERENCES sucursal (id)
         ON DELETE CASCADE,
-    CONSTRAINT uq_producto_nombre_por_sucursal
-        UNIQUE (sucursal_id, nombre),
+    CONSTRAINT uq_producto_sucursal_codigo
+        UNIQUE (sucursal_id, codigo),
     CONSTRAINT chk_producto_stock_no_negativo
         CHECK (stock >= 0)
 );
