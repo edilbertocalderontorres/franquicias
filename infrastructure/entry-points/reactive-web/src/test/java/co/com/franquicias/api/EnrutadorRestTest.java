@@ -1,6 +1,7 @@
 package co.com.franquicias.api;
 
 import co.com.franquicias.api.mapper.FranquiciaMapper;
+import co.com.franquicias.api.mapper.SucursalMapper;
 import co.com.franquicias.usecase.consultasnegocio.ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.franquicias.CrearFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.inventario.ActualizarInventarioProductoCasoDeUso;
@@ -42,6 +43,9 @@ class EnrutadorRestTest {
 
     @MockitoBean
     private FranquiciaMapper franquiciaMapper;
+
+    @MockitoBean
+    private SucursalMapper sucursalMapper;
 
     @Test
     void debeCargarElContextoConLasRutasDefinidas() {

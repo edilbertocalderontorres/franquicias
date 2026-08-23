@@ -20,6 +20,8 @@ public class SucursalEntidad {
 
     private String nombre;
 
+    private String codigo;
+
     @Column("franquicia_id")
     private Long franquiciaId;
 }

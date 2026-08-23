@@ -8,5 +8,7 @@ public interface FranquiciaRepositorio {
 
     Mono<Franquicia> guardar(Franquicia franquicia);
 
+    Mono<Franquicia> buscarPorId(Long id);
+
     Mono<Boolean> existePorTipoDocumentoYNumeroDocumento(TipoDocumento tipoDocumento, String numeroDocumento);
 }

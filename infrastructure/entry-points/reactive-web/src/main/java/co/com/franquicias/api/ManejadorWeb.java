@@ -1,7 +1,9 @@
 package co.com.franquicias.api;
 
 import co.com.franquicias.api.dto.request.FranquiciaPeticion;
+import co.com.franquicias.api.dto.request.SucursalPeticion;
 import co.com.franquicias.api.mapper.FranquiciaMapper;
+import co.com.franquicias.api.mapper.SucursalMapper;
 import co.com.franquicias.usecase.consultasnegocio.ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.inventario.ActualizarInventarioProductoCasoDeUso;
 import co.com.franquicias.usecase.franquicias.CrearFranquiciaCasoDeUso;
@@ -26,6 +28,7 @@ public class ManejadorWeb {
     private final ActualizarInventarioProductoCasoDeUso actualizarInventarioProductoCasoDeUso;
     private final ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso consultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
     private final FranquiciaMapper franquiciaMapper;
+    private final SucursalMapper sucursalMapper;
 
     public Mono<ServerResponse> crearFranquicia(ServerRequest request) {
         return request.bodyToMono(FranquiciaPeticion.class)
@@ -36,7 +39,13 @@ public class ManejadorWeb {
     }
 
     public Mono<ServerResponse> crearSucursal(ServerRequest request) {
-        return null;
+        Long franquiciaId = Long.valueOf(request.pathVariable("franquiciaId"));
+        return request.bodyToMono(SucursalPeticion.class)
+                .map(sucursalMapper::aDominio)
+                .doOnNext(sucursal -> sucursal.setFranquiciaId(franquiciaId))
+                .flatMap(crearSucursalPorFranquiciaCasoDeUso::ejecutar)
+                .map(sucursalMapper::aRespuesta)
+                .flatMap(respuesta -> ServerResponse.status(HttpStatus.CREATED).bodyValue(respuesta));
     }
 
     public Mono<ServerResponse> crearProducto(ServerRequest request) {

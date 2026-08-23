@@ -27,6 +27,11 @@ public class FranquiciaRepositorioReactivoAdaptador extends ReactiveAdapterOpera
     }
 
     @Override
+    public Mono<Franquicia> buscarPorId(Long id) {
+        return findById(id);
+    }
+
+    @Override
     public Mono<Boolean> existePorTipoDocumentoYNumeroDocumento(TipoDocumento tipoDocumento, String numeroDocumento) {
         return repository.existePorTipoDocumentoYNumeroDocumento(tipoDocumento, numeroDocumento);
     }
