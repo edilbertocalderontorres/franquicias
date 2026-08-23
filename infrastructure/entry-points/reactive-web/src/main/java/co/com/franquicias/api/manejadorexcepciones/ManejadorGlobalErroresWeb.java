@@ -16,6 +16,7 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Mono;
 
@@ -27,10 +28,10 @@ import java.time.Instant;
 public class ManejadorGlobalErroresWeb extends AbstractErrorWebExceptionHandler {
 
     public ManejadorGlobalErroresWeb(ErrorAttributes errorAttributes,
-                                      WebProperties.Resources resources,
+                                      WebProperties webProperties,
                                       ApplicationContext applicationContext,
                                       ServerCodecConfigurer serverCodecConfigurer) {
-        super(errorAttributes, resources, applicationContext);
+        super(errorAttributes, webProperties.getResources(), applicationContext);
         this.setMessageWriters(serverCodecConfigurer.getWriters());
         this.setMessageReaders(serverCodecConfigurer.getReaders());
     }
@@ -63,6 +64,9 @@ public class ManejadorGlobalErroresWeb extends AbstractErrorWebExceptionHandler 
         }
         if (error instanceof ServerWebInputException || error instanceof IllegalArgumentException) {
             return MapeoErrorHttp.PETICION_INVALIDA.getHttpStatus();
+        }
+        if (error instanceof ResponseStatusException responseStatusException) {
+            return HttpStatus.valueOf(responseStatusException.getStatusCode().value());
         }
         return MapeoErrorHttp.ERROR_TECNICO.getHttpStatus();
     }
