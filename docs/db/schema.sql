@@ -4,6 +4,10 @@
 -- Nota de diseño (ver docs/decisiones/0001-identificador-unico-de-negocio.md):
 -- "nombre" NO es clave de unicidad en ningún nivel (un espacio o un caracter distinto
 -- genera duplicados accidentales). La unicidad real la dan atributos de negocio dedicados.
+--
+-- Nota de diseño (ver docs/decisiones/0002-borrado-logico-de-producto.md):
+-- "producto" usa borrado lógico (columna "activo"); el código de un producto eliminado
+-- NO se libera (uq_producto_sucursal_codigo se mantiene sin filtrar por "activo").
 
 CREATE TABLE IF NOT EXISTS franquicia (
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -33,6 +37,7 @@ CREATE TABLE IF NOT EXISTS producto (
     nombre      VARCHAR(120) NOT NULL,
     codigo      VARCHAR(30) NOT NULL,
     stock       INTEGER NOT NULL DEFAULT 0,
+    activo      BOOLEAN NOT NULL DEFAULT true,
     sucursal_id BIGINT NOT NULL,
     CONSTRAINT fk_producto_sucursal
         FOREIGN KEY (sucursal_id) REFERENCES sucursal (id)

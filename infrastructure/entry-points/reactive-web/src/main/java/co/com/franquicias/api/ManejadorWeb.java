@@ -62,7 +62,10 @@ public class ManejadorWeb {
     }
 
     public Mono<ServerResponse> eliminarProducto(ServerRequest request) {
-        return null;
+        Long sucursalId = Long.valueOf(request.pathVariable("sucursalId"));
+        Long productoId = Long.valueOf(request.pathVariable("productoId"));
+        return borrarProductoPorSucursalCasoDeUso.ejecutar(sucursalId, productoId)
+                .then(ServerResponse.noContent().build());
     }
 
     public Mono<ServerResponse> actualizarStockProducto(ServerRequest request) {

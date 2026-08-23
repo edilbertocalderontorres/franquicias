@@ -13,6 +13,7 @@ public interface ProductoMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "sucursalId", ignore = true)
+    @Mapping(target = "activo", constant = "true")
     Producto aDominio(ProductoPeticion peticion);
 
     ProductoRespuesta aRespuesta(Producto producto);

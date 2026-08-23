@@ -24,6 +24,8 @@ public class ProductoEntidad {
 
     private Integer stock;
 
+    private Boolean activo;
+
     @Column("sucursal_id")
     private Long sucursalId;
 }

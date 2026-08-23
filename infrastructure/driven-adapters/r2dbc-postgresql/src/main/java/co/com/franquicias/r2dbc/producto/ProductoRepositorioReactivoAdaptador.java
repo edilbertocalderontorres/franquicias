@@ -26,6 +26,16 @@ public class ProductoRepositorioReactivoAdaptador extends ReactiveAdapterOperati
     }
 
     @Override
+    public Mono<Producto> buscarPorId(Long id) {
+        return repository.buscarActivoPorId(id).map(this::toEntity);
+    }
+
+    @Override
+    public Mono<Void> eliminarLogicamente(Long id) {
+        return repository.eliminarLogicamente(id);
+    }
+
+    @Override
     public Mono<Boolean> existePorSucursalIdYCodigo(Long sucursalId, String codigo) {
         return repository.existePorSucursalIdYCodigo(sucursalId, codigo);
     }

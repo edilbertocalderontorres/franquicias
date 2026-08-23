@@ -15,5 +15,6 @@ public class Producto {
     private String nombre;
     private String codigo;
     private Integer stock;
+    private Boolean activo;
     private Long sucursalId;
 }
