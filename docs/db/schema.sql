@@ -5,9 +5,10 @@
 -- "nombre" NO es clave de unicidad en ningún nivel (un espacio o un caracter distinto
 -- genera duplicados accidentales). La unicidad real la dan atributos de negocio dedicados.
 --
--- Nota de diseño (ver docs/decisiones/0002-borrado-logico-de-producto.md):
+-- Nota de diseño (ver docs/decisiones/0002-borrado-logico-e-idempotencia-stock.md):
 -- "producto" usa borrado lógico (columna "activo"); el código de un producto eliminado
 -- NO se libera (uq_producto_sucursal_codigo se mantiene sin filtrar por "activo").
+-- "transaccion_inventario" es la tabla de control de idempotencia para movimientos de stock.
 
 CREATE TABLE IF NOT EXISTS franquicia (
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -50,3 +51,21 @@ CREATE TABLE IF NOT EXISTS producto (
 
 -- Índice compuesto para soportar "producto con más stock por sucursal"
 CREATE INDEX idx_producto_sucursal_stock ON producto (sucursal_id, stock DESC);
+
+-- Tabla de control de idempotencia para movimientos de stock (ver ADR 0002).
+-- La aritmética del delta se hace dentro del UPDATE (sin lectura previa);
+-- esta tabla es lo que permite detectar un reintento y no reaplicar el delta.
+CREATE TABLE IF NOT EXISTS transaccion_inventario (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    idkey          VARCHAR(100) NOT NULL,
+    producto_id    BIGINT NOT NULL,
+    delta          INTEGER NOT NULL,
+    usuario        VARCHAR(120) NOT NULL,
+    fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_transaccion_inventario_producto
+        FOREIGN KEY (producto_id) REFERENCES producto (id),
+    CONSTRAINT uq_transaccion_inventario_idkey
+        UNIQUE (idkey)
+);
+
+CREATE INDEX idx_transaccion_inventario_producto ON transaccion_inventario (producto_id);

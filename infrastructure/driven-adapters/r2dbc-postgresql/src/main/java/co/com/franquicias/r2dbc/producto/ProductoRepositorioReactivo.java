@@ -21,4 +21,8 @@ public interface ProductoRepositorioReactivo extends
     @Modifying
     @Query("UPDATE producto SET activo = false WHERE id = :id")
     Mono<Void> eliminarLogicamente(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE producto SET stock = stock + :delta WHERE id = :id AND activo = true AND stock + :delta >= 0")
+    Mono<Integer> aplicarDelta(@Param("id") Long id, @Param("delta") Integer delta);
 }

@@ -1,5 +1,6 @@
 package co.com.franquicias.api;
 
+import co.com.franquicias.api.dto.request.ActualizarStockPeticion;
 import co.com.franquicias.api.dto.request.FranquiciaPeticion;
 import co.com.franquicias.api.dto.request.ProductoPeticion;
 import co.com.franquicias.api.dto.request.SucursalPeticion;
@@ -69,10 +70,25 @@ public class ManejadorWeb {
     }
 
     public Mono<ServerResponse> actualizarStockProducto(ServerRequest request) {
-        return null;
+        Long productoId = Long.valueOf(request.pathVariable("productoId"));
+        String idempotencyKey = obtenerHeaderRequerido(request, "Idempotency-Key");
+        String usuario = obtenerHeaderRequerido(request, "X-Usuario");
+        return request.bodyToMono(ActualizarStockPeticion.class)
+                .map(ActualizarStockPeticion::getDelta)
+                .flatMap(delta -> actualizarInventarioProductoCasoDeUso.ejecutar(productoId, idempotencyKey, usuario, delta))
+                .map(productoMapper::aRespuesta)
+                .flatMap(respuesta -> ServerResponse.status(HttpStatus.OK).bodyValue(respuesta));
     }
 
     public Mono<ServerResponse> consultarProductoMayorStockPorSucursal(ServerRequest request) {
         return null;
+    }
+
+    private String obtenerHeaderRequerido(ServerRequest request, String nombre) {
+        String valor = request.headers().firstHeader(nombre);
+        if (valor == null || valor.isBlank()) {
+            throw new IllegalArgumentException("Falta el header requerido: " + nombre);
+        }
+        return valor;
     }
 }

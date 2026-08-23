@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ActualizarStockPeticion {
 
-    private Integer stock;
+    private Integer delta;
 }

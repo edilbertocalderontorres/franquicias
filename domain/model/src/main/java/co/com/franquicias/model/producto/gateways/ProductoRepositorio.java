@@ -12,4 +12,6 @@ public interface ProductoRepositorio {
     Mono<Void> eliminarLogicamente(Long id);
 
     Mono<Boolean> existePorSucursalIdYCodigo(Long sucursalId, String codigo);
+
+    Mono<Producto> aplicarMovimientoStock(Long productoId, String idempotencyKey, String usuario, Integer delta);
 }
