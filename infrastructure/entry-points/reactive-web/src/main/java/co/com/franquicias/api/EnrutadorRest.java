@@ -15,12 +15,17 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class EnrutadorRest {
 
     @Bean
-    public RouterFunction<ServerResponse> routerFunction(ManejadorWeb manejadorWeb) {
-        return route(POST("/api/franquicias"), manejadorWeb::crearFranquicia)
-                .andRoute(POST("/api/franquicias/{franquiciaId}/sucursales"), manejadorWeb::crearSucursal)
-                .andRoute(POST("/api/sucursales/{sucursalId}/productos"), manejadorWeb::crearProducto)
-                .andRoute(DELETE("/api/sucursales/{sucursalId}/productos/{productoId}"), manejadorWeb::eliminarProducto)
-                .andRoute(PATCH("/api/productos/{productoId}/stock"), manejadorWeb::actualizarStockProducto)
-                .andRoute(GET("/api/franquicias/{franquiciaId}/productos/mayor-stock"), manejadorWeb::consultarProductoMayorStockPorSucursal);
+    public RouterFunction<ServerResponse> routerFunction(ManejadorFranquicia manejadorFranquicia,
+                                                           ManejadorSucursal manejadorSucursal,
+                                                           ManejadorProducto manejadorProducto) {
+        return route(POST("/api/franquicias"), manejadorFranquicia::crear)
+                .andRoute(PATCH("/api/franquicias/{franquiciaId}/nombre"), manejadorFranquicia::actualizarNombre)
+                .andRoute(POST("/api/franquicias/{franquiciaId}/sucursales"), manejadorSucursal::crear)
+                .andRoute(PATCH("/api/sucursales/{sucursalId}/nombre"), manejadorSucursal::actualizarNombre)
+                .andRoute(POST("/api/sucursales/{sucursalId}/productos"), manejadorProducto::crear)
+                .andRoute(DELETE("/api/sucursales/{sucursalId}/productos/{productoId}"), manejadorProducto::eliminar)
+                .andRoute(PATCH("/api/productos/{productoId}/stock"), manejadorProducto::actualizarStock)
+                .andRoute(PATCH("/api/productos/{productoId}/nombre"), manejadorProducto::actualizarNombre)
+                .andRoute(GET("/api/franquicias/{franquiciaId}/productos/mayor-stock"), manejadorProducto::consultarMayorStockPorSucursal);
     }
 }

@@ -14,7 +14,7 @@ API reactiva para administrar franquicias, sus sucursales y los productos oferta
   |---|---|
   | `domain/model` | Entidades y puertos (gateways), sin dependencias de framework |
   | `domain/usecase` | Casos de uso (`*CasoDeUso`), orquestan los gateways |
-  | `infrastructure/entry-points/reactive-web` | Router, handler, DTOs, mapeo con MapStruct, manejo global de errores |
+  | `infrastructure/entry-points/reactive-web` | Router, handlers segmentados por entidad (`ManejadorFranquicia`, `ManejadorSucursal`, `ManejadorProducto`), DTOs, mapeo con MapStruct, manejo global de errores |
   | `infrastructure/driven-adapters/r2dbc-postgresql` | Adaptadores de persistencia (Postgres reactivo) |
   | `applications/app-service` | Ensambla todo, config de Spring Boot |
 
@@ -39,10 +39,13 @@ Propuesta de escalamiento a futuro (no implementada): [`docs/decisiones/0003-esc
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/franquicias` | Crear franquicia |
+| PATCH | `/api/franquicias/{franquiciaId}/nombre` | Actualizar nombre de franquicia |
 | POST | `/api/franquicias/{franquiciaId}/sucursales` | Crear sucursal |
+| PATCH | `/api/sucursales/{sucursalId}/nombre` | Actualizar nombre de sucursal |
 | POST | `/api/sucursales/{sucursalId}/productos` | Crear producto |
 | DELETE | `/api/sucursales/{sucursalId}/productos/{productoId}` | Eliminar producto (borrado lógico) |
 | PATCH | `/api/productos/{productoId}/stock` | Actualizar stock por delta, idempotente (headers `Idempotency-Key` y `X-Usuario` requeridos) |
+| PATCH | `/api/productos/{productoId}/nombre` | Actualizar nombre de producto |
 | GET | `/api/franquicias/{franquiciaId}/productos/mayor-stock` | Producto con más stock por cada sucursal de la franquicia |
 
 Documentación interactiva (OpenAPI): `http://localhost:8080/openapi.yml` — pegar la URL en [editor.swagger.io](https://editor.swagger.io) o importarla en Postman.

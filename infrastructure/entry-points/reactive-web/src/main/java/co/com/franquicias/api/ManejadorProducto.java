@@ -1,18 +1,14 @@
 package co.com.franquicias.api;
 
+import co.com.franquicias.api.dto.request.ActualizarNombrePeticion;
 import co.com.franquicias.api.dto.request.ActualizarStockPeticion;
-import co.com.franquicias.api.dto.request.FranquiciaPeticion;
 import co.com.franquicias.api.dto.request.ProductoPeticion;
-import co.com.franquicias.api.dto.request.SucursalPeticion;
-import co.com.franquicias.api.mapper.FranquiciaMapper;
 import co.com.franquicias.api.mapper.ProductoMapper;
-import co.com.franquicias.api.mapper.SucursalMapper;
 import co.com.franquicias.usecase.consultasnegocio.ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
 import co.com.franquicias.usecase.inventario.ActualizarInventarioProductoCasoDeUso;
-import co.com.franquicias.usecase.franquicias.CrearFranquiciaCasoDeUso;
+import co.com.franquicias.usecase.productos.ActualizarNombreProductoCasoDeUso;
 import co.com.franquicias.usecase.productos.BorrarProductoPorSucursalCasoDeUso;
 import co.com.franquicias.usecase.productos.CrearProductoPorSucursalCasoDeUso;
-import co.com.franquicias.usecase.sucursales.CrearSucursalPorFranquiciaCasoDeUso;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -22,37 +18,16 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class ManejadorWeb {
+public class ManejadorProducto {
 
-    private final CrearFranquiciaCasoDeUso crearFranquiciaCasoDeUso;
-    private final CrearSucursalPorFranquiciaCasoDeUso crearSucursalPorFranquiciaCasoDeUso;
     private final CrearProductoPorSucursalCasoDeUso crearProductoPorSucursalCasoDeUso;
     private final BorrarProductoPorSucursalCasoDeUso borrarProductoPorSucursalCasoDeUso;
     private final ActualizarInventarioProductoCasoDeUso actualizarInventarioProductoCasoDeUso;
+    private final ActualizarNombreProductoCasoDeUso actualizarNombreProductoCasoDeUso;
     private final ConsultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso consultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso;
-    private final FranquiciaMapper franquiciaMapper;
-    private final SucursalMapper sucursalMapper;
     private final ProductoMapper productoMapper;
 
-    public Mono<ServerResponse> crearFranquicia(ServerRequest request) {
-        return request.bodyToMono(FranquiciaPeticion.class)
-                .map(franquiciaMapper::aDominio)
-                .flatMap(crearFranquiciaCasoDeUso::ejecutar)
-                .map(franquiciaMapper::aRespuesta)
-                .flatMap(respuesta -> ServerResponse.status(HttpStatus.CREATED).bodyValue(respuesta));
-    }
-
-    public Mono<ServerResponse> crearSucursal(ServerRequest request) {
-        Long franquiciaId = Long.valueOf(request.pathVariable("franquiciaId"));
-        return request.bodyToMono(SucursalPeticion.class)
-                .map(sucursalMapper::aDominio)
-                .doOnNext(sucursal -> sucursal.setFranquiciaId(franquiciaId))
-                .flatMap(crearSucursalPorFranquiciaCasoDeUso::ejecutar)
-                .map(sucursalMapper::aRespuesta)
-                .flatMap(respuesta -> ServerResponse.status(HttpStatus.CREATED).bodyValue(respuesta));
-    }
-
-    public Mono<ServerResponse> crearProducto(ServerRequest request) {
+    public Mono<ServerResponse> crear(ServerRequest request) {
         Long sucursalId = Long.valueOf(request.pathVariable("sucursalId"));
         return request.bodyToMono(ProductoPeticion.class)
                 .map(productoMapper::aDominio)
@@ -62,14 +37,14 @@ public class ManejadorWeb {
                 .flatMap(respuesta -> ServerResponse.status(HttpStatus.CREATED).bodyValue(respuesta));
     }
 
-    public Mono<ServerResponse> eliminarProducto(ServerRequest request) {
+    public Mono<ServerResponse> eliminar(ServerRequest request) {
         Long sucursalId = Long.valueOf(request.pathVariable("sucursalId"));
         Long productoId = Long.valueOf(request.pathVariable("productoId"));
         return borrarProductoPorSucursalCasoDeUso.ejecutar(sucursalId, productoId)
                 .then(ServerResponse.noContent().build());
     }
 
-    public Mono<ServerResponse> actualizarStockProducto(ServerRequest request) {
+    public Mono<ServerResponse> actualizarStock(ServerRequest request) {
         Long productoId = Long.valueOf(request.pathVariable("productoId"));
         String idempotencyKey = obtenerHeaderRequerido(request, "Idempotency-Key");
         String usuario = obtenerHeaderRequerido(request, "X-Usuario");
@@ -80,7 +55,16 @@ public class ManejadorWeb {
                 .flatMap(respuesta -> ServerResponse.status(HttpStatus.OK).bodyValue(respuesta));
     }
 
-    public Mono<ServerResponse> consultarProductoMayorStockPorSucursal(ServerRequest request) {
+    public Mono<ServerResponse> actualizarNombre(ServerRequest request) {
+        Long productoId = Long.valueOf(request.pathVariable("productoId"));
+        return request.bodyToMono(ActualizarNombrePeticion.class)
+                .map(ActualizarNombrePeticion::getNombre)
+                .flatMap(nombre -> actualizarNombreProductoCasoDeUso.ejecutar(productoId, nombre))
+                .map(productoMapper::aRespuesta)
+                .flatMap(respuesta -> ServerResponse.status(HttpStatus.OK).bodyValue(respuesta));
+    }
+
+    public Mono<ServerResponse> consultarMayorStockPorSucursal(ServerRequest request) {
         Long franquiciaId = Long.valueOf(request.pathVariable("franquiciaId"));
         return consultaProductoMayorStockPorSucursalDeFranquiciaCasoDeUso.ejecutar(franquiciaId)
                 .map(tupla -> productoMapper.aRespuesta(tupla.getT1(), tupla.getT2()))

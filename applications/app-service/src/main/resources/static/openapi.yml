@@ -48,6 +48,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorRespuesta'
 
+  /api/franquicias/{franquiciaId}/nombre:
+    patch:
+      tags: [Franquicias]
+      summary: Actualizar el nombre de una franquicia
+      parameters:
+        - $ref: '#/components/parameters/FranquiciaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarNombrePeticion'
+            examples:
+              ejemplo:
+                value:
+                  nombre: "Franquicia Andina Renombrada"
+      responses:
+        '200':
+          description: Nombre actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FranquiciaRespuesta'
+        '404':
+          description: La franquicia no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+
   /api/franquicias/{franquiciaId}/sucursales:
     post:
       tags: [Sucursales]
@@ -80,6 +110,36 @@ paths:
                 $ref: '#/components/schemas/ErrorRespuesta'
         '409':
           description: Ya existe una sucursal con ese código en la franquicia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+
+  /api/sucursales/{sucursalId}/nombre:
+    patch:
+      tags: [Sucursales]
+      summary: Actualizar el nombre de una sucursal
+      parameters:
+        - $ref: '#/components/parameters/SucursalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarNombrePeticion'
+            examples:
+              ejemplo:
+                value:
+                  nombre: "Sucursal Centro Renombrada"
+      responses:
+        '200':
+          description: Nombre actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SucursalRespuesta'
+        '404':
+          description: La sucursal no existe
           content:
             application/json:
               schema:
@@ -198,6 +258,36 @@ paths:
                 $ref: '#/components/schemas/ErrorRespuesta'
         '409':
           description: El delta dejaría el stock en negativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+
+  /api/productos/{productoId}/nombre:
+    patch:
+      tags: [Productos]
+      summary: Actualizar el nombre de un producto
+      parameters:
+        - $ref: '#/components/parameters/ProductoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarNombrePeticion'
+            examples:
+              ejemplo:
+                value:
+                  nombre: "Camiseta Basica Renombrada"
+      responses:
+        '200':
+          description: Nombre actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoRespuesta'
+        '404':
+          description: El producto no existe
           content:
             application/json:
               schema:
@@ -324,6 +414,13 @@ components:
         sucursalId:
           type: integer
           format: int64
+
+    ActualizarNombrePeticion:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
 
     ActualizarStockPeticion:
       type: object

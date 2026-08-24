@@ -11,6 +11,15 @@ curl -i -X POST http://localhost:8080/api/franquicias \
 ```
 → `201` con la franquicia creada. `409` si ya existe una con ese `tipoDocumento`+`numeroDocumento`.
 
+## Actualizar nombre de franquicia
+
+```
+curl -i -X PATCH http://localhost:8080/api/franquicias/1/nombre \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Franquicia Andina Renombrada"}'
+```
+→ `200` con la franquicia actualizada. `404` si no existe.
+
 ## Crear sucursal
 
 ```
@@ -19,6 +28,15 @@ curl -i -X POST http://localhost:8080/api/franquicias/1/sucursales \
   -d '{"nombre":"Sucursal Centro","codigo":"SUC-001"}'
 ```
 → `201`. `404` si la franquicia no existe, `409` si el `codigo` ya está usado en esa franquicia.
+
+## Actualizar nombre de sucursal
+
+```
+curl -i -X PATCH http://localhost:8080/api/sucursales/1/nombre \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Sucursal Centro Renombrada"}'
+```
+→ `200` con la sucursal actualizada. `404` si no existe.
 
 ## Crear producto
 
@@ -48,6 +66,15 @@ curl -i -X PATCH http://localhost:8080/api/productos/1/stock \
   -d '{"delta":5}'
 ```
 → `200` con el producto actualizado. `400` si falta algún header. `404` si el producto no existe. `409` si el delta deja el stock negativo. Para probar un decremento, usar `{"delta":-5}`.
+
+## Actualizar nombre de producto
+
+```
+curl -i -X PATCH http://localhost:8080/api/productos/1/nombre \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Camiseta Basica Renombrada"}'
+```
+→ `200` con el producto actualizado. `404` si no existe.
 
 ## Producto con más stock por sucursal (franquicia puntual)
 
