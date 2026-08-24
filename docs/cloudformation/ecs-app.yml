@@ -1,0 +1,260 @@
+# Aprovisiona un servicio ECS Fargate para el contenedor de la app (deployment/Dockerfile),
+# detrás de un Application Load Balancer, con tasks repartidas en al menos dos AZs.
+# Requiere que la imagen ya esté publicada en un registro accesible (ej. ECR).
+# Uso:
+#   aws cloudformation deploy \
+#     --template-file docs/cloudformation/ecs-app.yml \
+#     --stack-name franquicias-ecs \
+#     --capabilities CAPABILITY_IAM \
+#     --parameter-overrides VpcId=vpc-xxxx SubnetIds=subnet-aaaa,subnet-bbbb \
+#       ImageUri=<cuenta>.dkr.ecr.<region>.amazonaws.com/franquicias-app:latest \
+#       DbHost=<DBEndpointAddress de rds-postgres.yml> DbUsername=app DbPassword=<clave>
+# SubnetIds debe tener subnets en al menos dos AZs distintas (las usan tanto el ALB
+# como las tasks). No se provisiona NAT Gateway en este template (ver comparación de
+# costos en la conversación): las tasks reciben IP pública propia para salir a
+# internet (pull de imagen, logs), y solo aceptan tráfico entrante desde el ALB.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Servicio ECS Fargate multi-AZ, detrás de un Application Load Balancer, que
+  ejecuta la imagen de la app de franquicias y la conecta a la instancia RDS.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnets públicas en al menos dos AZs, para el ALB y para las tasks Fargate.
+  ClusterName:
+    Type: String
+    Default: franquicias-cluster
+  ImageUri:
+    Type: String
+    Description: URI completa de la imagen (build de deployment/Dockerfile) en el registro, con tag.
+  ContainerPort:
+    Type: Number
+    Default: 8080
+  HealthCheckPath:
+    Type: String
+    Default: /actuator/health
+    Description: Path del target group para el health check del ALB.
+  Cpu:
+    Type: String
+    Default: '256'
+    Description: Unidades de CPU Fargate (256 = 0.25 vCPU).
+  Memory:
+    Type: String
+    Default: '512'
+    Description: MiB de memoria Fargate
+  DesiredCount:
+    Type: Number
+    Default: 2
+    Description: Número de tasks; con 2+ y subnets en distintas AZs, ECS las reparte para alta disponibilidad.
+  AllowedIngressCidr:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR permitido hacia el ALB (puerto 80, y 443 si se define CertificateArn).
+  CertificateArn:
+    Type: String
+    Default: ''
+    Description: ARN de un certificado ACM para HTTPS en el ALB. Si se deja vacío, el listener HTTP reenvía directo al target group (sin redirección a HTTPS).
+  DbHost:
+    Type: String
+    Description: Endpoint de la instancia RDS (Output DBEndpointAddress de rds-postgres.yml).
+  DbPort:
+    Type: String
+    Default: '5432'
+  DbName:
+    Type: String
+    Default: franquicias
+  DbSchema:
+    Type: String
+    Default: public
+  DbUsername:
+    Type: String
+    Description: Usuario de aplicación creado a mano contra RDS (no el usuario maestro).
+  DbPassword:
+    Type: String
+    NoEcho: true
+    Description: Se pasa como variable de entorno plana por simplicidad; en producción debería venir de Secrets Manager.
+
+Conditions:
+  HasCertificate: !Not [!Equals [!Ref CertificateArn, '']]
+
+Resources:
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub /ecs/${ClusterName}/franquicias-app
+      RetentionInDays: 7
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: franquicias-app
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: franquicias-app
+          Image: !Ref ImageUri
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Protocol: tcp
+          Environment:
+            - Name: DB_HOST
+              Value: !Ref DbHost
+            - Name: DB_PORT
+              Value: !Ref DbPort
+            - Name: DB_NAME
+              Value: !Ref DbName
+            - Name: DB_SCHEMA
+              Value: !Ref DbSchema
+            - Name: DB_USERNAME
+              Value: !Ref DbUsername
+            - Name: DB_PASSWORD
+              Value: !Ref DbPassword
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: franquicias-app
+
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso publico al ALB de franquicias-app
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref AllowedIngressCidr
+        - !If
+          - HasCertificate
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: !Ref AllowedIngressCidr
+          - !Ref AWS::NoValue
+
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso a la task de franquicias-app, solo desde el ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          SourceSecurityGroupId: !GetAtt AlbSecurityGroup.GroupId
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      Subnets: !Ref SubnetIds
+      SecurityGroups:
+        - !GetAtt AlbSecurityGroup.GroupId
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VpcId
+      TargetType: ip
+      Port: !Ref ContainerPort
+      Protocol: HTTP
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher:
+        HttpCode: '200'
+
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - !If
+          - HasCertificate
+          - Type: redirect
+            RedirectConfig:
+              Protocol: HTTPS
+              Port: '443'
+              StatusCode: HTTP_301
+          - Type: forward
+            TargetGroupArn: !Ref TargetGroup
+
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: HasCertificate
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn: HttpListener
+    Properties:
+      Cluster: !Ref ECSCluster
+      LaunchType: FARGATE
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      HealthCheckGracePeriodSeconds: 60
+      LoadBalancers:
+        - ContainerName: franquicias-app
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: !Ref SubnetIds
+          SecurityGroups:
+            - !GetAtt ServiceSecurityGroup.GroupId
+          AssignPublicIp: ENABLED
+
+Outputs:
+  ClusterName:
+    Value: !Ref ECSCluster
+  ServiceName:
+    Value: !GetAtt ECSService.Name
+  TaskDefinitionArn:
+    Value: !Ref TaskDefinition
+  LogGroupName:
+    Value: !Ref LogGroup
+  AlbDnsName:
+    Description: URL publica del servicio (http, o https si se definio CertificateArn)
+    Value: !GetAtt LoadBalancer.DNSName

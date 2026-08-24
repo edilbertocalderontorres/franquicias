@@ -1,0 +1,115 @@
+# Aprovisiona una instancia RDS PostgreSQL en el tier gratuito de AWS (criterio 8).
+# Uso:
+#   aws cloudformation deploy \
+#     --template-file docs/cloudformation/rds-postgres.yml \
+#     --stack-name franquicias-rds \
+#     --parameter-overrides VpcId=vpc-xxxx SubnetIds=subnet-aaaa,subnet-bbbb \
+#       MyIpCidr=200.1.2.3/32 MasterUserPassword=<clave-maestra>
+# Tras crearla: correr docs/db/schema.sql contra el endpoint (Output DBEndpointAddress)
+# con el usuario maestro, y crear ahí el usuario de aplicación app:app.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  RDS PostgreSQL (free tier: db.t3.micro/db.t4g.micro, 20GB gp3, single-AZ,
+  sin Performance Insights ni Enhanced Monitoring) para el proyecto de franquicias.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC donde se creará la instancia (usar la VPC por defecto de la cuenta).
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Al menos dos subnets en distintas AZs (RDS lo exige aunque la instancia sea single-AZ).
+  MyIpCidr:
+    Type: String
+    Description: CIDR de la IP pública propia, para restringir el ingreso al puerto 5432. Nunca usar 0.0.0.0/0.
+    AllowedPattern: '^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
+  DBInstanceIdentifier:
+    Type: String
+    Default: franquicias-db
+  DBName:
+    Type: String
+    Default: franquicias
+  MasterUsername:
+    Type: String
+    Default: franquicias_admin
+  MasterUserPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Clave del usuario maestro. El usuario de aplicación (app:app) se crea después, a mano, contra este endpoint.
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    AllowedValues: [db.t3.micro, db.t4g.micro]
+  EngineVersion:
+    Type: String
+    Default: '16.4'
+    Description: Debe coincidir en major version con docs/docker-compose.yml (postgres:16).
+  AllocatedStorage:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 20
+    Description: Fijo en 20GB (límite del free tier). No se define MaxAllocatedStorage a propósito, para dejar el autoscaling de storage deshabilitado.
+  PubliclyAccessible:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: "'true' temporalmente, mientras la app no esté desplegada en la misma VPC (ver ecs-app.yml)."
+  DeletionProtection:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets para la instancia RDS de franquicias
+      SubnetIds: !Ref SubnetIds
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso a Postgres RDS de franquicias, restringido a la IP propia
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: !Ref MyIpCidr
+
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      Engine: postgres
+      EngineVersion: !Ref EngineVersion
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref AllocatedStorage
+      StorageType: gp3
+      StorageEncrypted: false
+      DBName: !Ref DBName
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !GetAtt DBSecurityGroup.GroupId
+      PubliclyAccessible: !Ref PubliclyAccessible
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      EnablePerformanceInsights: false
+      MonitoringInterval: 0
+      DeletionProtection: !Ref DeletionProtection
+
+Outputs:
+  DBEndpointAddress:
+    Description: Host para DB_HOST en application.yaml / ecs-app.yml
+    Value: !GetAtt DBInstance.Endpoint.Address
+  DBEndpointPort:
+    Value: !GetAtt DBInstance.Endpoint.Port
+  DBSecurityGroupId:
+    Value: !GetAtt DBSecurityGroup.GroupId
