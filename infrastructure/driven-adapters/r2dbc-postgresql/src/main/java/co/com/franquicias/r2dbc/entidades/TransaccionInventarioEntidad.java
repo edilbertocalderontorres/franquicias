@@ -1,4 +1,4 @@
-package co.com.franquicias.r2dbc.entity;
+package co.com.franquicias.r2dbc.entidades;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,20 +8,27 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.time.Instant;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("sucursal")
-public class SucursalEntidad {
+@Table("transaccion_inventario")
+public class TransaccionInventarioEntidad {
 
     @Id
     private Long id;
 
-    private String nombre;
+    private String idkey;
 
-    private String codigo;
+    @Column("producto_id")
+    private Long productoId;
 
-    @Column("franquicia_id")
-    private Long franquiciaId;
+    private Integer delta;
+
+    private String usuario;
+
+    @Column("fecha_creacion")
+    private Instant fechaCreacion;
 }

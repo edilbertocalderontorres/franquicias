@@ -1,6 +1,6 @@
 package co.com.franquicias.r2dbc.producto;
 
-import co.com.franquicias.r2dbc.entity.TransaccionInventarioEntidad;
+import co.com.franquicias.r2dbc.entidades.TransaccionInventarioEntidad;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;

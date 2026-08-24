@@ -1,7 +1,7 @@
 package co.com.franquicias.r2dbc.franquicia;
 
 import co.com.franquicias.model.franquicia.TipoDocumento;
-import co.com.franquicias.r2dbc.entity.FranquiciaEntidad;
+import co.com.franquicias.r2dbc.entidades.FranquiciaEntidad;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;

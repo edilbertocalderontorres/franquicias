@@ -1,6 +1,6 @@
 package co.com.franquicias.r2dbc.sucursal;
 
-import co.com.franquicias.r2dbc.entity.SucursalEntidad;
+import co.com.franquicias.r2dbc.entidades.SucursalEntidad;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;

@@ -1,4 +1,4 @@
-package co.com.franquicias.r2dbc.entity;
+package co.com.franquicias.r2dbc.entidades;
 
 import co.com.franquicias.model.franquicia.TipoDocumento;
 import lombok.AllArgsConstructor;

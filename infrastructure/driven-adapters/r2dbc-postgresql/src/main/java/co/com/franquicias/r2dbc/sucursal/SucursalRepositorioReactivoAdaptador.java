@@ -2,7 +2,7 @@ package co.com.franquicias.r2dbc.sucursal;
 
 import co.com.franquicias.model.sucursal.Sucursal;
 import co.com.franquicias.model.sucursal.gateways.SucursalRepositorio;
-import co.com.franquicias.r2dbc.entity.SucursalEntidad;
+import co.com.franquicias.r2dbc.entidades.SucursalEntidad;
 import co.com.franquicias.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;

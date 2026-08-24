@@ -3,7 +3,7 @@ package co.com.franquicias.r2dbc.franquicia;
 import co.com.franquicias.model.franquicia.Franquicia;
 import co.com.franquicias.model.franquicia.TipoDocumento;
 import co.com.franquicias.model.franquicia.gateways.FranquiciaRepositorio;
-import co.com.franquicias.r2dbc.entity.FranquiciaEntidad;
+import co.com.franquicias.r2dbc.entidades.FranquiciaEntidad;
 import co.com.franquicias.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
